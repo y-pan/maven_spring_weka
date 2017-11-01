@@ -13,6 +13,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import web.weka.exceptions.InvalidFileException;
+import web.weka.exceptions.OutOfResourceException;
 import web.weka.model.Feature;
 import web.weka.model.GetFeaturesResponse;
 import weka.core.Attribute;
@@ -21,8 +22,8 @@ import weka.core.Instances;
 @Service
 public class ProdictService {
 
-	public int size = 0;
-	// ArrayList<Feature> flist = new ArrayList<Feature>();
+	private int size = 5; // default initial size 5
+	private int used = 0;
 	ArrayList<String> mk = new ArrayList<String>();
 	HashMap<String, ArrayList<Feature>> m = new HashMap<String, ArrayList<Feature>>();
 
@@ -30,25 +31,45 @@ public class ProdictService {
 
 	}
 
-	public void setSize(int size) {
-		this.size = size;
-	}
 
+	public synchronized void setSize(int size) {
+		if(size < 0) return; // <0, invalid, ignore; >=0 up-scale/down-scale service, 0 -> stop service 
+		
+		this.size = size;
+		if(this.used > this.size) {
+			releaseMemory(this.used - this.size);   // trigger release memory
+		}
+	}
+	
+	public void releaseMemory(int releaseCount) {
+		if(releaseCount <=0 ) return;
+		// first in first out approach
+		// todo: may need to consider remove the least active one, in modelMeta: useCount, lastCalled time. Remove in this order: lastCalled -> useCount -> firstInFirstOut
+		for(int i = 0; i<releaseCount; i++) {
+			System.out.println("removing memory for:" + mk.get(0));
+			m.remove(mk.get(0));
+			mk.remove(0);
+			this.used = this.used - 1;
+		}
+		
+	}
+	
 	public GetFeaturesResponse get(String id) {
 		return new GetFeaturesResponse(m.get(id));
 	}
 	
-	public ProdictService loadStruct(String key, String structFilePath) throws IOException, InvalidFileException {
+	public ProdictService loadStruct(String key, String structFilePath) throws IOException, InvalidFileException, OutOfResourceException {
 
+		if(this.size<=0) throw new OutOfResourceException();
+		
 		if (mk.contains(key)) {
-			System.out.println("--------- in memory. Total: "+mk.size() + " out of "+this.size +"-------------");
+			System.out.println("--------- in memory: used="+this.used+"|memory="+m.size()+"|mkey="+mk.size() + " ["+this.size +"] -------------");
 			return this;
 		}
 
 		if (mk.size() >= this.size) {
-			System.out.println("========== overflow: "+mk.size() + " out of "+this.size +" , removed the first add new ==========");
-			m.remove(mk.get(0));
-			mk.remove(0);
+			System.out.println("--------- overflow: used="+this.used+"|memory="+m.size()+"|mkey="+mk.size() + " ["+this.size +"] -------------");
+			this.releaseMemory(1);
 		}
 
 		File _f = new File(structFilePath);
@@ -89,7 +110,8 @@ public class ProdictService {
 		}
 		m.put(key, flist);
 		mk.add(key);
-		System.out.println("--------- new added. Total: "+mk.size() + " out of "+this.size +"-------------");
+		this.used = this.used + 1;
+		System.out.println("--------- new added: used="+this.used+"|memory="+m.size()+"|mkey="+mk.size() + " ["+this.size +"] -------------");
 		return this;
 
 	}

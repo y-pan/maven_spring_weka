@@ -2,6 +2,9 @@ package web.weka.model;
 
 import java.util.ArrayList;
 
+/**
+ * Usage: {"error": String, "data": ArrayList<Feature>}
+ * */
 public class GetFeaturesResponse {
 
 	private String error = null;
