@@ -8,6 +8,23 @@ import java.util.ArrayList;
 public class GetFeaturesResponse {
 
 	private String error = null;
+	private String modelRelation = null; // @RELATION in .arff, defines the model
+	private String modelType = null;
+	public String getModelRelation() {
+		return modelRelation;
+	}
+
+	public void setModelRelation(String modelRelation) {
+		this.modelRelation = modelRelation;
+	}
+
+	public String getModelType() {
+		return modelType;
+	}
+
+	public void setModelType(String modelType) {
+		this.modelType = modelType;
+	}
 	private ArrayList<Feature> data = null;
 	
 	public GetFeaturesResponse(String error){
@@ -17,11 +34,12 @@ public class GetFeaturesResponse {
 	public GetFeaturesResponse(ArrayList<Feature> data){
 		this.data = data;
 	}
-	public GetFeaturesResponse(String error, ArrayList<Feature> data){
-		this.error = error;
+	public GetFeaturesResponse(ArrayList<Feature> data, String relation, String modelType){
 		this.data = data;
+		this.modelRelation = relation;
+		this.modelType = modelType;
 	}
-	
+
 	public String getError() {
 		return error;
 	}

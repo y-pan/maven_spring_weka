@@ -12,10 +12,12 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import utils.Lib;
 import web.weka.exceptions.InvalidFileException;
 import web.weka.exceptions.OutOfResourceException;
 import web.weka.model.Feature;
 import web.weka.model.GetFeaturesResponse;
+import web.weka.model.ModelMeta;
 import weka.core.Attribute;
 import weka.core.Instances;
 
@@ -24,8 +26,10 @@ public class ProdictService {
 
 	private int size = 5; // default initial size 5
 	private int used = 0;
-	ArrayList<String> mk = new ArrayList<String>();
-	HashMap<String, ArrayList<Feature>> m = new HashMap<String, ArrayList<Feature>>();
+	HashMap<String, ModelMeta> mStat = new HashMap<String, ModelMeta>(); // model stats
+	ArrayList<String> mKeys = new ArrayList<String>();
+	
+	HashMap<String, ArrayList<Feature>> memory = new HashMap<String, ArrayList<Feature>>();
 
 	public ProdictService() {
 
@@ -46,35 +50,39 @@ public class ProdictService {
 		// first in first out approach
 		// todo: may need to consider remove the least active one, in modelMeta: useCount, lastCalled time. Remove in this order: lastCalled -> useCount -> firstInFirstOut
 		for(int i = 0; i<releaseCount; i++) {
-			System.out.println("removing memory for:" + mk.get(0));
-			m.remove(mk.get(0));
-			mk.remove(0);
+			System.out.println("removing memory for:" + mKeys.get(0));
+			memory.remove(mKeys.get(0));
+			mStat.remove(mKeys.get(0));
+			mKeys.remove(0);
 			this.used = this.used - 1;
 		}
-		
+		System.out.println("after rm:"+ mKeys.toString());
 	}
 	
 	public GetFeaturesResponse get(String id) {
-		return new GetFeaturesResponse(m.get(id));
+		return new GetFeaturesResponse(memory.get(id), mStat.get(id).getModelRelation() ,mStat.get(id).getModelType());
 	}
 	
 	public ProdictService loadStruct(String key, String structFilePath) throws IOException, InvalidFileException, OutOfResourceException {
 
 		if(this.size<=0) throw new OutOfResourceException();
 		
-		if (mk.contains(key)) {
-			System.out.println("--------- in memory: used="+this.used+"|memory="+m.size()+"|mkey="+mk.size() + " ["+this.size +"] -------------");
+		if (mKeys.contains(key)) {  // memory has this model's features
+			System.out.println("--------- in memory: used="+this.used+"|memory="+memory.size()+"|mkey="+mKeys.size() + " ["+this.size +"] -------------");
+			mStat.get(key).mark();// mark this model(name=key) is called now.
 			return this;
 		}
 
-		if (mk.size() >= this.size) {
-			System.out.println("--------- overflow: used="+this.used+"|memory="+m.size()+"|mkey="+mk.size() + " ["+this.size +"] -------------");
+		if (mKeys.size() >= this.size) {  // memory maximum reached, dump one
+			System.out.println("--------- overflow: used="+this.used+"|memory="+memory.size()+"|mkey="+mKeys.size() + " ["+this.size +"] -------------");
 			this.releaseMemory(1);
 		}
 
+		// memory doesn't have it, load from .arff file
 		File _f = new File(structFilePath);
-		if (!_f.exists() || !_f.isFile() || !_f.canRead() || !_f.getName().toLowerCase().endsWith(".arff"))
-			throw new InvalidFileException("Invalid URL");
+		if (!_f.exists() || !_f.isFile() || !_f.canRead() || !_f.getName().toLowerCase().endsWith(".arff")) { 
+			throw new InvalidFileException();
+		}
 
 		Instances struct = GetInstances(structFilePath);
 		ArrayList<Feature> flist = new ArrayList<Feature>();
@@ -108,10 +116,12 @@ public class ProdictService {
 			}
 			flist.add(f);
 		}
-		m.put(key, flist);
-		mk.add(key);
+		memory.put(key, flist);
+		mKeys.add(key);
+		ModelMeta _mm = new ModelMeta(struct.relationName(), Lib.GetModelType(structFilePath));
+		mStat.put(key, _mm); // key is from URL path-value, could be filename(or part, or relevant to it if file encrypted) of .arff file  
 		this.used = this.used + 1;
-		System.out.println("--------- new added: used="+this.used+"|memory="+m.size()+"|mkey="+mk.size() + " ["+this.size +"] -------------");
+		System.out.println("--------- new added: used="+this.used+"|memory="+memory.size()+"|mkey="+mKeys.size() + " ["+this.size +"] -------------");
 		return this;
 
 	}

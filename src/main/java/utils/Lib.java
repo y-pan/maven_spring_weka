@@ -1,6 +1,7 @@
 package utils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -32,11 +33,28 @@ public class Lib {
                 if(reader != null){
                     reader.close();
                 }
-                
             }
         }else if(inFile.toLowerCase().endsWith(".csv")){
-            // to do here ...
+            // to do here ...   not sure if need to use .csv, since .arff is more functional & reliable to get @RELATION, @ATTRIBUTE, type, selections(for nominal type) 
         }
         return data;
+    }
+    
+    public static String GetModelType(String filePath) {
+    	try {
+        	BufferedReader r = new BufferedReader(new FileReader(filePath));
+        	String line, result = "";
+        	while((line = r.readLine()) != null) {
+        		if(line.toUpperCase().matches("^.*%TYPE=.*$")) {
+        			result = line.replaceFirst("%TYPE=", "").trim(); // %TYPE=J48 => J48
+//                	System.out.println(line + " => " + result);
+                	break;
+        		}
+        	}
+        	return result;
+    	}catch(Exception e) {
+    		return "";
+    	}
+
     }
 }

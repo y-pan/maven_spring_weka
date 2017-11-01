@@ -1,3 +1,4 @@
+%TYPE=iris2
 @RELATION iris
 
 @ATTRIBUTE sepallength	REAL

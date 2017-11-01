@@ -1,3 +1,4 @@
+%TYPE=J51
 @RELATION iris
 
 @ATTRIBUTE sepallength	REAL
