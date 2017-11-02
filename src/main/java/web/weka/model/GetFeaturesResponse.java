@@ -10,6 +10,8 @@ public class GetFeaturesResponse {
 	private String error = null;
 	private String modelRelation = null; // @RELATION in .arff, defines the model
 	private String modelType = null;
+	private ArrayList<Feature> data = null;
+
 	public String getModelRelation() {
 		return modelRelation;
 	}
@@ -25,7 +27,6 @@ public class GetFeaturesResponse {
 	public void setModelType(String modelType) {
 		this.modelType = modelType;
 	}
-	private ArrayList<Feature> data = null;
 	
 	public GetFeaturesResponse(String error){
 		this.error = error;

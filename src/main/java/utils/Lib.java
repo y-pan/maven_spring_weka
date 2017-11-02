@@ -4,12 +4,19 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
+import web.weka.model.ModelMeta;
 import weka.core.Instances;
 
 public class Lib {
 
-	public enum FileType {ARFF, CSV}
+	public enum FILE_TYPE {ARFF, CSV, MODEL}
     
 	/**
 	 * Usage: load data (Weka.Instances) from .arff file, could be served as data structure if file only contains @Relation, @Attrubites
@@ -55,6 +62,55 @@ public class Lib {
     	}catch(Exception e) {
     		return "";
     	}
-
+    }
+    
+    public static String getFilePathByName(String name, FILE_TYPE type) {
+    	String folder = "Content/"; // start from root level
+    	switch(type) {
+    		case ARFF: return  folder + name + ".arff"; 
+    		case MODEL: return folder + name + ".model";
+    		default: return "";
+    	}
+    }
+    
+    public static String getOldestModel(HashMap<String, ModelMeta> map, ArrayList<String> list) {
+    	if(list.size() <= 0) return "";
+    	
+    	String ok = "";
+    	ModelMeta om = null;
+    	for(String key : list) {
+    		if(ok.equals("") || ok.equals(null)) {
+    			ok = key;
+    			om = map.get(key);
+    		}else {
+    			ModelMeta tmp = map.get(key);
+    			if(tmp.olderThan(om)) {
+    				om = tmp;
+    				ok = key;
+    			}
+    		}
+    	}
+    	
+    	return ok;
+    	
+//    	
+//    	String result = "";
+//    	Set entrySet = map.entrySet();
+//    	Iterator it = entrySet.iterator();
+//    	//String older = "";
+//    	// Iterate through HashMap entries(Key-Value pairs)
+//    	Map.Entry oldest = null;
+//    	while(it.hasNext()){
+//    	   Map.Entry _temp = (Map.Entry)it.next();
+//    	   if(oldest.equals(null)) {
+//    		   oldest = _temp;
+//    		   continue;
+//    	   }else {
+//    		  ModelMeta o = (ModelMeta)(oldest.getValue());
+//       	   	  ModelMeta t = (ModelMeta)(_temp.getValue());
+//       	   	  if(t.olderThan(o)) oldest = _temp;
+//    	   }
+//    	}
+//    	return oldest.getKey().toString();
     }
 }
