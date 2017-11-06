@@ -11,6 +11,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import utils.Lib;
 import utils.Lib.FILE_TYPE;
@@ -33,6 +34,7 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 
+@CrossOrigin(origins = "http://localhost:8080")
 @Service
 public class PredictService {
 

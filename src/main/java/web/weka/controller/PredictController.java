@@ -25,8 +25,20 @@ public class PredictController {
 
 	@Autowired
 	PredictService service;
-		
-	@RequestMapping("/predict/{id}")
+	/* ------------------------ not important below here ------------------------  */
+	@RequestMapping("/api")
+	public String getApi(){  // id : fileName without extension, like "iris" from "iris.arff", same with model name like iris.model 
+		return "{Hello Future!}";
+	}
+	
+	@RequestMapping("/api/predict")
+	public String getApi2(){  // id : fileName without extension, like "iris" from "iris.arff", same with model name like iris.model 
+		return "Hey you, can't find the way? I'm just watching you";
+	}
+	
+	/* ------------------------ not important above here ------------------------  */
+
+	@RequestMapping("/api/predict/{id}")
 	public GetFeaturesResponse get(@PathVariable("id") String id){  // id : fileName without extension, like "iris" from "iris.arff", same with model name like iris.model 
 		try {
 			return service.prepareFeatures(id, Lib.getFilePathByName(id,FILE_TYPE.ARFF)).get(id);
@@ -37,7 +49,7 @@ public class PredictController {
 		}
 	}
 	
-	@RequestMapping(method=RequestMethod.POST, value="/predict/{id}")
+	@RequestMapping(method=RequestMethod.POST, value="/api/predict/{id}")
 	public IPredictResponse Post(@PathVariable("id") String id, @RequestBody PredictRequest req){  // id : filename without extension, like "iris" from "iris.model" 
 		try {
 
@@ -51,7 +63,7 @@ public class PredictController {
 	
 	
 	// [ admin user only ]
-	@RequestMapping(method=RequestMethod.POST, value="/predict/set/{size}")
+	@RequestMapping(method=RequestMethod.POST, value="/api/predict/set/{size}")
 	public void set(@PathVariable("size") int size) {
 		System.out.println("ADMIN set size to: " + size);
 		service.setSize(size); // determines how many models/featureSets will be remembered, instead of load from xxx.arff, xxx.model file every time
