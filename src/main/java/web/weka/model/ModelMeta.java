@@ -28,9 +28,7 @@ public class ModelMeta {
 
 
 	public void mark() {
-//		this.useCount = this.useCount + 1;
 		this.lastUsed = new Date();
-		System.out.println(toString());
 	}
 	
 	public boolean olderThan(ModelMeta m) {  // older -> more inactive -> to be removed if resource reaches maximum

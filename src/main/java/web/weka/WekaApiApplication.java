@@ -38,22 +38,9 @@ public class WekaApiApplication {
 		reg.setName("CORS Filter");
 		reg.addUrlPatterns("/*");
 		reg.setOrder(1);
-		System.out.println("=================== CORS Filter registered! =============");
 		return reg;
 		
 	}
-	
-//   @Bean
-//    public WebMvcConfigurer corsConfigurer() {
-//        return new WebMvcConfigurerAdapter() {
-//            @Override
-//            public void addCorsMappings(CorsRegistry registry) {
-//                registry.addMapping("/predict").allowedOrigins("http://localhost:8080");
-//                registry.addMapping("/").allowedOrigins("http://localhost:8080");
-//                registry.addMapping("/").allowedOrigins("http://localhost:4200");
-//            }
-//        };
-//    }
 	
 	
 }

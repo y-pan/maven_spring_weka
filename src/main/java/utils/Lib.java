@@ -25,17 +25,16 @@ public class Lib {
         BufferedReader reader = null;
         Instances data = null;
         if(inFile.toLowerCase().endsWith(".arff")){
-                
             try {
                 reader = new BufferedReader(new FileReader(inFile));
                 data = new Instances(reader);
                 reader.close();
                 data.setClassIndex(data.numAttributes() - 1);
-                
+
             } catch (IOException ex) {
-                
+                ex.printStackTrace();
             } catch(Exception e){
-                
+                e.printStackTrace();
             }finally{
                 if(reader != null){
                     reader.close();
@@ -54,7 +53,6 @@ public class Lib {
         	while((line = r.readLine()) != null) {
         		if(line.toUpperCase().matches("^.*%TYPE=.*$")) {
         			result = line.replaceFirst("%TYPE=", "").trim(); // %TYPE=J48 => J48
-//                	System.out.println(line + " => " + result);
                 	break;
         		}
         	}

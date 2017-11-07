@@ -17,6 +17,7 @@ import utils.Lib;
 import utils.Lib.FILE_TYPE;
 import web.weka.exceptions.InvalidFileOrUrlException;
 import web.weka.exceptions.OutOfResourceException;
+import web.weka.model.AttributeTypes;
 import web.weka.model.Feature;
 import web.weka.model.GetFeaturesResponse;
 import web.weka.model.IPredictResponse;
@@ -68,7 +69,6 @@ public class PredictService {
 		if(fStatMap.size() > 0 ) {
 			String oldestKey = Lib.getOldestModel(fStatMap, fKeysList);
 				if(oldestKey.equals("") || oldestKey.equals(null)) {
-					System.out.println("F ok not found: ");
 					fMemoryMap.remove(fKeysList.get(0));
 					fKeysList.remove(0);
 				}else {
@@ -76,7 +76,6 @@ public class PredictService {
 					fKeysList.remove(oldestKey);
 				}
 				this.fUsed = this.fUsed - 1;
-				System.out.println("remove oldest f: " +oldestKey);
 			}
 	}
 	private void removeOldOrFirstModel() {
@@ -125,13 +124,13 @@ public class PredictService {
 			}
 			return this;
 		}
-		
+
 		// memory doesn't have it, load from .arff file, CHECK file valid first
 		File _f = new File(structFilePath);
 		if (!_f.exists() || !_f.isFile() || !_f.canRead() || !_f.getName().toLowerCase().endsWith(".arff")) { 
 			throw new InvalidFileOrUrlException();
 		}
-		
+
 		// make room if full
 		if (fKeysList.size() >= this.size) {  // memory maximum reached, dump one
 			System.out.println("--------- overflow feature memory: used="+this.fUsed+"|fmemory="+fMemoryMap.size()+"|fkey="+fKeysList.size() + " ["+this.size +"] -------------");
@@ -141,6 +140,7 @@ public class PredictService {
 		Instances struct = GetInstances(structFilePath);
 		ArrayList<Feature> flist = new ArrayList<Feature>();
 		int numAtt = struct.numAttributes();
+
 		for (int i = 0; i < numAtt; i++) {
 			Feature f = new Feature();
 			Attribute att = struct.attribute(i);
@@ -148,13 +148,13 @@ public class PredictService {
 			f.setName(att.name());
 
 			if (att.isNumeric()) {
-				f.setType("Numeric");
+				f.setType(AttributeTypes.NUMERIC);
 			} else if (att.isDate()) {
-				f.setType("Date");
+				f.setType(AttributeTypes.DATE);
 			} else if (att.isString()) {
-				f.setType("String");
+				f.setType(AttributeTypes.STRING);
 			} else if (att.isNominal()) {
-				f.setType("Nominal");
+				f.setType(AttributeTypes.NOMINAL);
 
 				List<String> optionList = new ArrayList<String>();
 				Enumeration values = att.enumerateValues();
@@ -166,7 +166,7 @@ public class PredictService {
 				optionArray = optionList.toArray(optionArray);
 				f.setOptions(optionArray);
 			} else {
-				f.setType("Unknown");
+				f.setType(AttributeTypes.UNKNOWN);
 			}
 			flist.add(f);
 		}
@@ -188,6 +188,8 @@ public class PredictService {
 	public GetFeaturesResponse get(String id) {
 		return new GetFeaturesResponse(fMemoryMap.get(id), fStatMap.get(id).getModelRelation() ,fStatMap.get(id).getModelType());
 	}
+	
+	
 	
 	// ================================ predict ================================
 	
@@ -251,65 +253,64 @@ public class PredictService {
 		return this;//classifier;
 	}
 	
+	
+	
 	/**todo: generalize method 
 	 * @throws Exception */
-	public IPredictResponse Predict(String modelKey, PredictRequest req) throws InvalidFileOrUrlException, OutOfResourceException,Exception {
-
-		String[] values = req.getData();
-
-        //String[] values = (txtInstance2Prodict.getText()).split(",");
-		String _debug = "";
-		for(String v : values) {
-			_debug += v + ",";
-		}
-		System.out.println("========== Try to predict: [ " + _debug + " ]");
-
-        int NUMBER_OF_ATTRIBUTES = 5;
-        int NUMBER_OF_INSTANCES = 1;
-
-        Attribute Attribute1 = new Attribute("sepallength");
-        Attribute Attribute2 = new Attribute("sepalwidth");
-        Attribute Attribute3 = new Attribute("petallength");
-        Attribute Attribute4 = new Attribute("petalwidth");
-        
-        List my_nominal_values = new ArrayList (3); 
-        my_nominal_values.add("Iris-setosa"); 
-        my_nominal_values.add("Iris-versicolor"); 
-        my_nominal_values.add("Iris-virginica");
-        
-        Attribute AttributeClass = new Attribute("classHere", my_nominal_values);
-
-        FastVector fvWekaAttribute = new FastVector(NUMBER_OF_ATTRIBUTES);
-        fvWekaAttribute.addElement(Attribute1);
-        fvWekaAttribute.addElement(Attribute2);
-        fvWekaAttribute.addElement(Attribute3);
-        fvWekaAttribute.addElement(Attribute4);
-        fvWekaAttribute.addElement(AttributeClass);
-       
-
-        Instances newSet = new Instances("NewOne",fvWekaAttribute,NUMBER_OF_INSTANCES);
-        newSet.setClassIndex(4); // last one
-        
-        Instance newSet_instance1 = new DenseInstance(NUMBER_OF_ATTRIBUTES);
-        newSet_instance1.setValue(Attribute1, Double.parseDouble(values[0]));
-        newSet_instance1.setValue(Attribute2, Double.parseDouble(values[1]));
-        newSet_instance1.setValue(Attribute3, Double.parseDouble(values[2]));
-        newSet_instance1.setValue(Attribute4, Double.parseDouble(values[3]));
-        //newSet_instance1.setValue(AttributeClass, "?");
-        
-        
-        //4.9,3.0,1.4,0.2?
-        newSet.add(newSet_instance1);   
-
-		double result = mMemoryMap.get(modelKey).classifyInstance(newSet.instance(0));
+	public IPredictResponse Predict(String key, PredictRequest req) throws InvalidFileOrUrlException, OutOfResourceException,Exception {
 		
-		System.out.println("========== Predict result: [ " + _debug+ " ] => " + result);
-
+		if(!fMemoryMap.containsKey(key)) {
+			prepareFeatures(key, Lib.getFilePathByName(key,FILE_TYPE.ARFF));
+		}
+		ArrayList<Feature> features = fMemoryMap.get(key); // features contains all features and class
+		String[] values = req.getData();  // here no class in values, but only feature values
+		Instances _ins = createInstances(features, values); // model + values => new instance
+		double result = mMemoryMap.get(key).classifyInstance(_ins.instance(0));
+		System.out.println("=====x===== Predict result: " + result);
 		IPredictResponse res = new PredictResponse(new Prediction(result));
-
         return res;
         
     }
+	
+	/**create 1 Instances containing 1 Instance for model to do prediction, base on Feature (recipe), and featureValues (material, sent from frontend, doesn't contain class value) */
+	private Instances createInstances(ArrayList<Feature> features, String[] featureValues) {
+		
+		int numOfAtt = featureValues.length + 1; // NUMBER_OF_ATTRIBUTES include class
+		int numOfIns = 1;   					// 1, unless for an arff file
+		String _debug = "";
+		for(String _v : featureValues) {
+			_debug += _v + ",";
+			System.out.println(_v);
+		}
+		System.out.println("========== Try to predict: [ " + _debug + " ]");
+		
+		ArrayList<Attribute> _aList = new ArrayList<>();
+		for(int i=0; i<features.size(); i++) {
+			Feature f = features.get(i); // could be feature or class	
+			if(f.getType() == AttributeTypes.NOMINAL) { // nominal  
+				int olen = f.getOptions().length;
+				List _vs = new ArrayList (olen); //olen
+				for(int j=0; j<olen; j++) {
+					_vs.add(f.getOptions()[j].toString());
+				}
+				_aList.add(new Attribute("a_n"+i, _vs));
+			}else {		// not nominal
+				_aList.add(new Attribute("a"+i));
+			}
+		}
+
+        FastVector _fv = new FastVector(numOfAtt);
+        _fv.addAll(_aList);
+        Instances _ins = new Instances("i",_fv, numOfIns);
+        _ins.setClassIndex(numOfAtt-1); // last one, including class totally there are 5, index starts from 0
+        Instance _in = new DenseInstance(numOfAtt);
+        for(int i=0; i< numOfAtt - 1; i++) {
+        	_in.setValue(_aList.get(i), Double.parseDouble(featureValues[i]));
+        }
+        //_in.setValue(AttributeClass, "?");
+         _ins.add(_in);   
+        return _ins;
+	}
 	
 	
 }
