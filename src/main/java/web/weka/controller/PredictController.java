@@ -1,6 +1,9 @@
 package web.weka.controller;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -31,9 +34,14 @@ public class PredictController {
 		return "{Hello Future!}";
 	}
 	
-	@RequestMapping("/api/predict")
-	public String getApi2(){  // id : fileName without extension, like "iris" from "iris.arff", same with model name like iris.model 
-		return "Hey you, can't find the way? I'm just watching you";
+	@RequestMapping("/api/predict") // GET all available models for frontend to use (show in navarea)
+	public Set getAll(){  // id : fileName without extension, like "iris" from "iris.arff", same with model name like iris.model 
+		
+		Set mlist = new HashSet<String>();
+		mlist.add("iris");
+		mlist.add("credit-g");
+		mlist.add("credit-g-opt");
+		return mlist;
 	}
 	
 	/* ------------------------ not important above here ------------------------  */
