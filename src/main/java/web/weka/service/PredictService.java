@@ -23,10 +23,13 @@ import web.weka.model.GetFeaturesResponse;
 import web.weka.model.IPredictResponse;
 import web.weka.model.IPrediction;
 import web.weka.model.ModelMeta;
+import web.weka.model.ModelTypes;
 import web.weka.model.PredictRequest;
 import web.weka.model.PredictResponse;
 import web.weka.model.Prediction;
 import weka.classifiers.Classifier;
+import weka.classifiers.functions.LibSVM;
+import weka.classifiers.functions.SMO;
 import weka.classifiers.trees.J48;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -228,9 +231,12 @@ public class PredictService {
 			System.out.println("========== overflow model memory: used="+this.mUsed+"|memory="+mMemoryMap.size()+"|mkey="+mKeysList.size() + " ["+this.size +"] ==========");
 			this.releaseMemory(1, MEMORY_TYPE.modelMemory);
 		}
-
+		
 		// Now load file
-		Classifier _c = (J48) SerializationHelper.read(modelPath);
+		// front-end will also send in modelType in request like : { "modelType" : "J48", "data":[1,1,6,4] }, but I think better manage that by server itself, so we only need the least data (the data array) going between server and client
+		Classifier _c = getModel(mStatMap.get(key).getModelType(), modelPath); // good to know we also have : mStatMap.get(key).getModelRelation(), not for backend, but for frontend user to get some idea about model
+		System.out.println("k="+key);
+		System.out.println("t="+mStatMap.get(key).getModelType());
 		mMemoryMap.put(key, _c);
 		mKeysList.add(key);
 		this.mUsed = this.mUsed + 1; 
@@ -253,7 +259,14 @@ public class PredictService {
 		return this;//classifier;
 	}
 	
-	
+	private Classifier getModel(String modelType, String modelPath) throws Exception {
+		switch(modelType.toUpperCase()) {
+			case ModelTypes.J48 : return (J48) SerializationHelper.read(modelPath);
+			case ModelTypes.SMO : return (SMO) SerializationHelper.read(modelPath);
+			case ModelTypes.LibSVM: return (LibSVM) SerializationHelper.read(modelPath);
+			default: return null;
+		}
+	}
 	
 	/**todo: generalize method 
 	 * @throws Exception */
@@ -266,7 +279,7 @@ public class PredictService {
 		String[] values = req.getData();  // here no class in values, but only feature values
 		Instances _ins = createInstances(features, values); // model + values => new instance
 		double result = mMemoryMap.get(key).classifyInstance(_ins.instance(0));
-		System.out.println("=====x===== Predict result: " + result);
+		System.out.println("========== Predict result: " + result);
 		IPredictResponse res = new PredictResponse(new Prediction(result));
         return res;
         
@@ -280,7 +293,6 @@ public class PredictService {
 		String _debug = "";
 		for(String _v : featureValues) {
 			_debug += _v + ",";
-			System.out.println(_v);
 		}
 		System.out.println("========== Try to predict: [ " + _debug + " ]");
 		

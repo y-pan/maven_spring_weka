@@ -1,7 +1,7 @@
 package web.weka.model;
 
 
-public class ModelMetaMap {
+public class ModelMetaMap { // to be persistent in memory
 
 	private String key;
 	private ModelMeta data;
