@@ -31,7 +31,7 @@ public class PredictController {
 	/* ------------------------ not important below here ------------------------  */
 	@RequestMapping("/api")
 	public String getApi(){  // id : fileName without extension, like "iris" from "iris.arff", same with model name like iris.model 
-		return "Welcome to web weka. You would get/post using url like: https://maven-spring-weka.herokuapp.com/api/predict/<modelName>";
+		return "Web-weka Api powered by Spring Boot. You would get/post using url like: https://maven-spring-weka.herokuapp.com/api/predict/<modelName>";
 	}
 	
 	@RequestMapping("/api/predict") // GET all available models for frontend to use (show in navarea)

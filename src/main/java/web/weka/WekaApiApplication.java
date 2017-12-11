@@ -26,7 +26,7 @@ public class WekaApiApplication {
 	@ResponseBody
 	@RequestMapping("/")
 	String entry() {
-		return "Web-weka Spring Boot App";
+		return "Web-weka Api powered by Spring Boot. You would get/post using url like: https://maven-spring-weka.herokuapp.com/api/predict/<modelName>";
 	}
 	public static void main(String[] args) {
 		SpringApplication.run(WekaApiApplication.class, args);
