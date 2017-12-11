@@ -14,6 +14,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
+import utils.Var;
 import web.config.CORSFilter;
 
 @Configuration
@@ -26,7 +27,7 @@ public class WekaApiApplication {
 	@ResponseBody
 	@RequestMapping("/")
 	String entry() {
-		return "Web-weka Api powered by Spring Boot. You would get/post using url like: https://maven-spring-weka.herokuapp.com/api/predict/<modelName>";
+		return Var.GREETING;
 	}
 	public static void main(String[] args) {
 		SpringApplication.run(WekaApiApplication.class, args);

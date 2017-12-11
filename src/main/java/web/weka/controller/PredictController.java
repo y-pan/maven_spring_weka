@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import utils.Lib.FILE_TYPE;
 import utils.Lib;
+import utils.Var;
 import web.weka.exceptions.InvalidFileOrUrlException;
 import web.weka.exceptions.OutOfResourceException;
 import web.weka.model.GetFeaturesResponse;
@@ -31,7 +32,7 @@ public class PredictController {
 	/* ------------------------ not important below here ------------------------  */
 	@RequestMapping("/api")
 	public String getApi(){  // id : fileName without extension, like "iris" from "iris.arff", same with model name like iris.model 
-		return "Web-weka Api powered by Spring Boot. You would get/post using url like: https://maven-spring-weka.herokuapp.com/api/predict/<modelName>";
+		return Var.GREETING;
 	}
 	
 	@RequestMapping("/api/predict") // GET all available models for frontend to use (show in navarea)
